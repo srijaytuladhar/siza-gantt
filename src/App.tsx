@@ -26,6 +26,15 @@ function App() {
     addTask,
   } = useGanttStore();
 
+  // Sync dark class on root html element based on theme
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
   const rightScrollRef = useRef<HTMLDivElement>(null);
 
   const [showAddUncategorizedModal, setShowAddUncategorizedModal] = useState(false);

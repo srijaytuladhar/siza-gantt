@@ -205,7 +205,7 @@ export const TreeRow: React.FC<TreeRowProps> = React.memo(({ item }) => {
           </div>
         );
       case 'feature':
-        return <FiLayers className="w-4 h-4 text-orange-500 dark:text-orange-400 shrink-0" />;
+        return <FiLayers className="w-4 h-4 text-blue-500 dark:text-blue-400 shrink-0" />;
       case 'task':
         return <FiCheckSquare className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />;
     }

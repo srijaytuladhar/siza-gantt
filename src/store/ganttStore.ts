@@ -17,9 +17,15 @@ interface GanttState {
   editingId: string | null;
   viewStartDate: string;
   viewEndDate: string;
-  supabaseConnected: boolean;
-  isLoading: boolean;
-  viewMode: 'timeline' | 'kanban';
+
+  // Color settings (hex strings)
+  defaultFeatureColor: string;
+  defaultTaskColor: string;
+
+  // Settings actions
+  setDefaultFeatureColor: (color: string) => void;
+  setDefaultTaskColor: (color: string) => void;
+  applyColorToAll: (featureColor: string, taskColor: string) => Promise<void>;
   
   // Actions
   initSupabase: () => Promise<void>;
@@ -160,7 +166,7 @@ const ensureUncategorizedExists = (
       dueDate: todayStr,
       duration: 1,
       featureIds: ['feature_uncategorized'],
-      color: 'indigo',
+      color: 'slate',
     };
   } else {
     if (!updatedProjects['project_uncategorized'].featureIds.includes('feature_uncategorized')) {
@@ -212,6 +218,8 @@ const getInitialState = () => {
           viewStartDate: parsed.viewStartDate || '2026-05-01',
           viewEndDate: parsed.viewEndDate || '2026-10-31',
           viewMode: parsed.viewMode || 'timeline',
+          defaultFeatureColor: parsed.defaultFeatureColor || 'blue',
+          defaultTaskColor: parsed.defaultTaskColor || 'emerald',
         };
       }
     }
@@ -230,6 +238,8 @@ const getInitialState = () => {
     viewStartDate: formatDateStr(addDays(new Date(), -30)),
     viewEndDate: formatDateStr(addDays(new Date(), 90)),
     viewMode: 'timeline' as const,
+    defaultFeatureColor: 'blue',
+    defaultTaskColor: 'emerald',
   };
 };
 
@@ -269,6 +279,8 @@ const saveToLocalStorage = (state: Partial<GanttState>) => {
         viewStartDate: state.viewStartDate,
         viewEndDate: state.viewEndDate,
         viewMode: state.viewMode,
+        defaultFeatureColor: state.defaultFeatureColor,
+        defaultTaskColor: state.defaultTaskColor,
       })
     );
   } catch (e) {
@@ -290,7 +302,77 @@ export const useGanttStore = create<GanttState>((set, get) => ({
   supabaseConnected: false,
   isLoading: false,
   viewMode: savedState.viewMode,
+  defaultFeatureColor: savedState.defaultFeatureColor,
+  defaultTaskColor: savedState.defaultTaskColor,
+  // Settings actions
+  setDefaultFeatureColor: (color: string) => {
+    set({ defaultFeatureColor: color });
+    saveToLocalStorage({ ...get(), defaultFeatureColor: color });
+  },
+  setDefaultTaskColor: (color: string) => {
+    set({ defaultTaskColor: color });
+    saveToLocalStorage({ ...get(), defaultTaskColor: color });
+  },
+  applyColorToAll: async (featureColor: string, taskColor: string) => {
+    const state = get();
+    // Update all features with the new hex color
+    const newFeatures: Record<string, any> = {};
+    Object.keys(state.features).forEach((fId) => {
+      newFeatures[fId] = { ...state.features[fId], color: featureColor };
+    });
+    // Update all tasks with the new hex color
+    const newTasks: Record<string, any> = {};
+    Object.keys(state.tasks).forEach((tId) => {
+      newTasks[tId] = { ...state.tasks[tId], color: taskColor };
+    });
+    set({
+      defaultFeatureColor: featureColor,
+      defaultTaskColor: taskColor,
+      features: newFeatures,
+      tasks: newTasks,
+    });
+    saveToLocalStorage({
+      ...state,
+      defaultFeatureColor: featureColor,
+      defaultTaskColor: taskColor,
+      features: newFeatures,
+      tasks: newTasks,
+    });
 
+    // Sync to Supabase if connected
+    if (get().supabaseConnected) {
+      // 1. Save global settings row
+      const { error: settingsError } = await supabase
+        .from('settings')
+        .upsert({
+          id: 'global',
+          default_feature_color: featureColor,
+          default_task_color: taskColor,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'id' });
+      if (settingsError) console.error('Failed to save settings to Supabase:', settingsError.message);
+
+      // 2. Bulk update all features' color column
+      const featureIds = Object.keys(state.features);
+      if (featureIds.length > 0) {
+        const { error: featError } = await supabase
+          .from('features')
+          .update({ color: featureColor })
+          .in('id', featureIds);
+        if (featError) console.error('Failed to update feature colors in Supabase:', featError.message);
+      }
+
+      // 3. Bulk update all tasks' color column
+      const taskIds = Object.keys(state.tasks);
+      if (taskIds.length > 0) {
+        const { error: taskError } = await supabase
+          .from('tasks')
+          .update({ color: taskColor })
+          .in('id', taskIds);
+        if (taskError) console.error('Failed to update task colors in Supabase:', taskError.message);
+      }
+    }
+  },
   initSupabase: async () => {
     set({ isLoading: true });
     try {
@@ -338,7 +420,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
             dueDate: p.due_date || formatDateStr(new Date()),
             duration: p.duration || 1,
             featureIds: [],
-            color: p.color || 'indigo',
+            color: p.color || 'slate',
           };
         });
       }
@@ -376,6 +458,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
             dueDate: t.due_date,
             duration: t.duration,
             status: t.status || 'todo',
+            color: t.color || undefined,
           };
           // Push to parent feature
           if (loadedFeatures[t.feature_id]) {
@@ -400,6 +483,20 @@ export const useGanttStore = create<GanttState>((set, get) => ({
       });
 
       console.log('Supabase sync successful! Loaded', ensured.projectIds.length, 'projects.');
+
+      // Load global settings from DB
+      const { data: settingsData } = await supabase
+        .from('settings')
+        .select('*')
+        .eq('id', 'global')
+        .single();
+      if (settingsData) {
+        set({
+          defaultFeatureColor: settingsData.default_feature_color || get().defaultFeatureColor,
+          defaultTaskColor: settingsData.default_task_color || get().defaultTaskColor,
+        });
+        console.log('Settings loaded from Supabase.');
+      }
 
       // Ensure uncategorized project/feature exist in Supabase DB in the background
       const todayStr = formatDateStr(new Date());
@@ -448,7 +545,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
       dueDate: todayStr,
       duration: 1,
       featureIds: [],
-      color: 'indigo',
+      color: 'slate',
     };
 
     const newProjects = { ...get().projects, [id]: newProject };
@@ -466,7 +563,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
         start_date: todayStr,
         due_date: todayStr,
         duration: 1,
-        color: 'indigo',
+        color: 'slate',
       });
       if (error) console.error('Failed to sync new project to Supabase:', error.message);
     }
@@ -1665,7 +1762,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
         startDate: p.startDate,
         dueDate: p.dueDate,
         duration: p.duration,
-        color: p.color || 'indigo',
+        color: p.color || 'slate',
       });
 
       if (p.collapsed) return;
@@ -1689,7 +1786,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
           startDate: f.startDate,
           dueDate: f.dueDate,
           duration: f.duration,
-          color: 'orange', // Always default to orange (features are the same color)
+          color: f.color, // pass through stored color (may be hex or named)
         });
 
         if (f.collapsed) return;
@@ -1711,6 +1808,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
             dueDate: t.dueDate,
             duration: t.duration,
             status: t.status,
+            color: t.color, // pass through stored color
           });
         });
       });
@@ -1728,7 +1826,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
         startDate: p.startDate,
         dueDate: p.dueDate,
         duration: p.duration,
-        color: p.color || 'indigo',
+        color: p.color || 'slate',
       });
 
       if (!p.collapsed) {
@@ -1750,6 +1848,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
               dueDate: t.dueDate,
               duration: t.duration,
               status: t.status,
+              color: t.color, // pass through stored color
             });
           });
         }

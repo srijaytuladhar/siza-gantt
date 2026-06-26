@@ -9,6 +9,7 @@ export interface Task {
   dueDate: string; // YYYY-MM-DD
   duration: number; // calculated in days
   status?: TaskStatus;
+  color?: string; // Optional hex color override
 }
 
 export interface Feature {

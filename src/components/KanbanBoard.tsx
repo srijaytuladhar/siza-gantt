@@ -87,8 +87,8 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
           const parentFeature = features[task.parentId];
           const grandparentProject = parentFeature ? projects[parentFeature.parentId] : null;
           const colorCfg = grandparentProject
-            ? FEATURE_COLORS[grandparentProject.color || 'indigo'] || FEATURE_COLORS.indigo
-            : FEATURE_COLORS.orange;
+            ? FEATURE_COLORS[grandparentProject.color || 'slate'] || FEATURE_COLORS.slate
+            : FEATURE_COLORS.slate;
 
           return (
             <div

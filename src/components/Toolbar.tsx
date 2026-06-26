@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useGanttStore } from '../store/ganttStore';
 import {
   FiPlus,
@@ -10,8 +10,10 @@ import {
   FiCalendar,
   FiZap,
   FiRefreshCw,
-  FiTrello
+  FiTrello,
+  FiSettings,
 } from 'react-icons/fi';
+import { SettingsModal } from './SettingsModal';
 
 interface ToolbarProps {
   onScrollToToday: () => void;
@@ -34,6 +36,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onScrollToToday }) => {
     setViewMode,
   } = useGanttStore();
 
+  const [showSettings, setShowSettings] = useState(false);
+
   const handleAddProject = () => {
     const name = prompt('Enter Project Name:');
     if (name && name.trim()) {
@@ -43,7 +47,6 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onScrollToToday }) => {
 
   return (
     <header className="h-14 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 flex items-center justify-between shrink-0 select-none z-30">
-
       {/* Brand & Left Actions */}
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-2">
@@ -55,7 +58,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onScrollToToday }) => {
           </span>
         </div>
 
-        <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800 hidden sm:block"></div>
+        <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800 hidden sm:block" />
 
         {/* View Switcher */}
         <div className="flex items-center bg-zinc-100 dark:bg-zinc-900 rounded-lg p-0.5 shrink-0">
@@ -64,7 +67,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onScrollToToday }) => {
             className={`px-3 py-1 text-xs font-bold rounded-md flex items-center space-x-1.5 transition-all duration-150 cursor-pointer ${viewMode === 'timeline'
               ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
               : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
-              }`}
+            }`}
           >
             <FiCalendar className="w-3.5 h-3.5" />
             <span className="hidden md:inline">Timeline</span>
@@ -74,15 +77,16 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onScrollToToday }) => {
             className={`px-3 py-1 text-xs font-bold rounded-md flex items-center space-x-1.5 transition-all duration-150 cursor-pointer ${viewMode === 'kanban'
               ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
               : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
-              }`}
+            }`}
           >
             <FiTrello className="w-3.5 h-3.5" />
             <span className="hidden md:inline">Kanban</span>
           </button>
         </div>
 
-        <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800 hidden sm:block"></div>
+        <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800 hidden sm:block" />
 
+        {/* Project actions */}
         <div className="flex items-center space-x-2">
           <button
             onClick={handleAddProject}
@@ -92,7 +96,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onScrollToToday }) => {
             <span>New Project</span>
           </button>
 
-          <button hidden
+          <button
+            hidden
             onClick={loadSampleData}
             title="Load Sample Project Data"
             className="hidden md:flex items-center space-x-1 px-2.5 h-9 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-xs font-medium transition-all"
@@ -101,7 +106,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onScrollToToday }) => {
             <span>Reset Demo</span>
           </button>
 
-          <button hidden
+          <button
+            hidden
             onClick={loadHugeData}
             title="Load 100 Projects, 500 Features, 5,000 Tasks"
             className="flex items-center space-x-1 px-2.5 h-9 rounded-lg border border-yellow-500/30 hover:border-yellow-500/50 hover:bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-xs font-semibold transition-all"
@@ -111,7 +117,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onScrollToToday }) => {
           </button>
 
           {projectIds.length > 0 && (
-            <button hidden
+            <button
+              hidden
               onClick={() => {
                 if (confirm('Delete all projects? This cannot be undone.')) clearAll();
               }}
@@ -153,8 +160,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onScrollToToday }) => {
                 onClick={() => setZoom(z)}
                 className={`px-3 py-1 text-xs font-semibold rounded-md uppercase tracking-wider transition-all duration-150 ${zoom === z
                   ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                  : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
-                  }`}
+                  : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'}`}
               >
                 {z.slice(0, -1)}
               </button>
@@ -179,8 +185,22 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onScrollToToday }) => {
             className="p-2 h-9 w-9 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-400 transition-all"
             title={`Toggle Theme (${theme === 'dark' ? 'Light' : 'Dark'})`}
           >
-            {theme === 'dark' ? <FiSun className="w-4.5 h-4.5 mx-auto text-yellow-500" /> : <FiMoon className="w-4.5 h-4.5 mx-auto text-indigo-500" />}
+            {theme === 'dark' ? (
+              <FiSun className="w-4.5 h-4.5 mx-auto text-yellow-500" />
+            ) : (
+              <FiMoon className="w-4.5 h-4.5 mx-auto text-indigo-500" />
+            )}
           </button>
+
+          {/* Settings button */}
+          <button
+            onClick={() => setShowSettings(true)}
+            className="p-2 h-9 w-9 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-zinc-600 dark:text-zinc-400 transition-all ml-2"
+            title="Open Settings"
+          >
+            <FiSettings className="w-4.5 h-4.5 mx-auto" />
+          </button>
+          {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
         </div>
       </div>
     </header>

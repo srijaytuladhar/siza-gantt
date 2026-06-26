@@ -20,6 +20,8 @@ export const TaskBar: React.FC<TaskBarProps> = React.memo(({ item }) => {
     moveFeature,
     selectedId,
     setSelectedId,
+    defaultTaskColor,
+    defaultFeatureColor,
   } = useGanttStore();
 
   const dragRef = useRef<HTMLDivElement>(null);
@@ -143,31 +145,39 @@ export const TaskBar: React.FC<TaskBarProps> = React.memo(({ item }) => {
     setDragStyle(null);
   };
 
-  // Styling based on row type
-  const getBarColor = () => {
+  // Compute inline hex background color for the bar
+  const getBarHexColor = (): string => {
     if (item.type === 'project') {
-      const projColorCfg = FEATURE_COLORS[item.color || 'indigo'] || FEATURE_COLORS.indigo;
-      return `${projColorCfg.bg} ${
-        isSelected 
-          ? 'border-2 border-indigo-500 dark:border-indigo-400 ring-2 ring-indigo-500/40 z-20 shadow-md' 
-          : `border ${projColorCfg.border}`
-      }`;
+      // Projects use named Tailwind color keys, map them to hex approximations
+      const projectColorMap: Record<string, string> = {
+        slate: '#64748b', blue: '#3b82f6', indigo: '#6366f1', violet: '#8b5cf6',
+        purple: '#a855f7', pink: '#ec4899', rose: '#f43f5e', orange: '#f97316',
+        amber: '#f59e0b', yellow: '#eab308', lime: '#84cc16', green: '#22c55e',
+        emerald: '#10b981', teal: '#14b8a6', cyan: '#06b6d4', sky: '#0ea5e9',
+      };
+      return projectColorMap[item.color || 'slate'] || '#64748b';
     }
     if (item.type === 'feature') {
-      const colorCfg = FEATURE_COLORS[item.color || 'orange'] || FEATURE_COLORS.orange;
-      return `${colorCfg.bg} ${
-        isSelected 
-          ? 'border-2 border-indigo-500 dark:border-indigo-400 ring-2 ring-indigo-500/40 z-20 shadow-md' 
-          : `border ${colorCfg.border}`
-      }`;
+      // Use per-item hex if it looks like hex, otherwise use the store default
+      if (item.color && item.color.startsWith('#')) return item.color;
+      // Named color fallback
+      const featureColorMap: Record<string, string> = {
+        blue: '#3b82f6', cyan: '#06b6d4', emerald: '#10b981', violet: '#8b5cf6',
+        amber: '#f59e0b', rose: '#f43f5e', pink: '#ec4899', indigo: '#6366f1',
+        orange: '#f97316', slate: '#64748b',
+      };
+      if (item.color && featureColorMap[item.color]) return featureColorMap[item.color];
+      return defaultFeatureColor || '#3b82f6';
     }
     // task
-    return `bg-emerald-500/80 dark:bg-emerald-600/80 hover:bg-emerald-500 dark:hover:bg-emerald-600 ${
-      isSelected 
-        ? 'border-2 border-indigo-500 dark:border-indigo-400 ring-2 ring-indigo-500/40 z-20 shadow-md' 
-        : 'border border-emerald-600 dark:border-emerald-500'
-    }`;
+    if (item.color && item.color.startsWith('#')) return item.color;
+    return defaultTaskColor || '#10b981';
   };
+
+  const barHex = getBarHexColor();
+  const selectedBorder = isSelected
+    ? '0 0 0 2px #6366f1, 0 0 0 4px rgba(99,102,241,0.25)'
+    : 'none';
 
   const isTask = item.type === 'task';
   const isDraggable = item.type === 'task' || item.type === 'feature';
@@ -180,10 +190,15 @@ export const TaskBar: React.FC<TaskBarProps> = React.memo(({ item }) => {
         width: currentWidth,
         height: '65%',
         top: '17.5%',
+        backgroundColor: barHex + 'cc', // ~80% opacity
+        borderRadius: '6px',
+        border: isSelected ? '2px solid #6366f1' : `1px solid ${barHex}`,
+        boxShadow: isSelected ? selectedBorder : undefined,
+        zIndex: isSelected ? 20 : undefined,
       }}
-      className={`rounded-md shadow-sm select-none transition-all flex items-center relative group ${getBarColor()} ${
+      className={`shadow-sm select-none transition-all flex items-center relative group ${
         isDraggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
-      } ${isDragging || isResizingLeft || isResizingRight ? 'shadow-md ring-2 ring-indigo-500/30' : ''}`}
+      } ${isDragging || isResizingLeft || isResizingRight ? 'shadow-md' : ''}`}
       onPointerDown={(e) => isDraggable && handlePointerDown(e, 'drag')}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
