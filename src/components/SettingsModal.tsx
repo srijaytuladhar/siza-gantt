@@ -117,8 +117,8 @@ export const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) =>
   };
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-50">
-      <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-2xl w-[420px] p-6 relative border border-zinc-200 dark:border-zinc-800">
+    <div className="fixed inset-0 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm z-50">
+      <div className="bg-white dark:bg-zinc-900 rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:w-[420px] p-5 sm:p-6 relative border border-zinc-200 dark:border-zinc-800 max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
           className="absolute top-3.5 right-3.5 text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors p-1 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800"

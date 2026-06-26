@@ -69,7 +69,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`flex-1 min-w-[280px] max-w-[420px] rounded-xl flex flex-col h-[calc(100vh-140px)] border border-zinc-200/60 dark:border-zinc-850/60 p-4 transition-all duration-200 ${
+      className={`flex-1 min-w-[260px] sm:min-w-[280px] sm:max-w-[420px] rounded-xl flex flex-col border border-zinc-200/60 dark:border-zinc-850/60 p-3 sm:p-4 transition-all duration-200 ${
         colors.border
       } ${isDragOver ? 'bg-zinc-200/30 dark:bg-zinc-900/60 ring-2 ring-indigo-500/20' : colors.bg}`}
     >
@@ -159,7 +159,7 @@ export const KanbanBoard: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 w-full p-6 overflow-x-auto flex justify-center space-x-6 bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex-1 w-full p-3 sm:p-6 overflow-x-auto flex flex-row gap-3 sm:gap-6 bg-zinc-50 dark:bg-zinc-950 items-start">
       <KanbanColumn
         status="todo"
         title="TO DO"

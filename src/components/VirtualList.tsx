@@ -2,6 +2,7 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import type { FlatRow } from '../types/gantt';
 import { useGanttStore } from '../store/ganttStore';
 import { TimelineGrid, TodayIndicator } from './GanttTimeline';
+import { FiList, FiCalendar } from 'react-icons/fi';
 
 interface VirtualListProps {
   items: FlatRow[];
@@ -29,6 +30,8 @@ export const VirtualList: React.FC<VirtualListProps> = ({
 
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(500);
+  // On mobile: track whether we're showing the tree panel or the timeline
+  const [mobilePanelMode, setMobilePanelMode] = useState<'tree' | 'timeline'>('timeline');
 
   // Resize listener to capture viewport height
   useEffect(() => {
@@ -67,10 +70,41 @@ export const VirtualList: React.FC<VirtualListProps> = ({
   const visibleItems = items.slice(startIndex, endIndex);
 
   return (
-    <div className="flex flex-1 w-full overflow-hidden select-none bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex flex-1 w-full overflow-hidden select-none bg-zinc-50 dark:bg-zinc-950 relative">
       
+      {/* Mobile Panel Toggle Tabs */}
+      <div className="md:hidden absolute top-0 left-0 right-0 z-30 flex h-8 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+        <button
+          onClick={() => setMobilePanelMode('tree')}
+          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-bold transition-all ${
+            mobilePanelMode === 'tree'
+              ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500'
+              : 'text-zinc-500 dark:text-zinc-400'
+          }`}
+        >
+          <FiList className="w-3 h-3" />
+          Tree
+        </button>
+        <button
+          onClick={() => setMobilePanelMode('timeline')}
+          className={`flex-1 flex items-center justify-center gap-1.5 text-xs font-bold transition-all ${
+            mobilePanelMode === 'timeline'
+              ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500'
+              : 'text-zinc-500 dark:text-zinc-400'
+          }`}
+        >
+          <FiCalendar className="w-3 h-3" />
+          Timeline
+        </button>
+      </div>
+
       {/* LEFT SIDE: Hierarchy Tree */}
-      <div className="w-[360px] md:w-[400px] shrink-0 border-r border-zinc-200 dark:border-zinc-800 flex flex-col overflow-hidden bg-zinc-50/50 dark:bg-zinc-900/40">
+      {/* On desktop: always visible; on mobile: only visible when mobilePanelMode === 'tree' */}
+      <div className={`
+        ${mobilePanelMode === 'tree' ? 'flex' : 'hidden'} md:flex
+        w-full md:w-[340px] lg:w-[400px] shrink-0 border-r border-zinc-200 dark:border-zinc-800 flex-col overflow-hidden bg-zinc-50/50 dark:bg-zinc-900/40
+        ${mobilePanelMode === 'tree' ? 'mt-8 md:mt-0' : ''}
+      `}>
         
         {/* Left Header Spacer */}
         <div 
@@ -110,7 +144,12 @@ export const VirtualList: React.FC<VirtualListProps> = ({
       </div>
 
       {/* RIGHT SIDE: Interactive Timeline */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
+      {/* On desktop: always visible; on mobile: only visible when mobilePanelMode === 'timeline' */}
+      <div className={`
+        ${mobilePanelMode === 'timeline' ? 'flex' : 'hidden'} md:flex
+        flex-1 flex-col overflow-hidden relative
+        ${mobilePanelMode === 'timeline' ? 'mt-8 md:mt-0' : ''}
+      `}>
         
         {/* Right Scroll Container (Scrolls vertically & horizontally) */}
         <div
