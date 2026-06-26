@@ -18,6 +18,8 @@ interface GanttState {
   viewStartDate: string;
   viewEndDate: string;
   viewMode: 'timeline' | 'kanban';
+  supabaseConnected: boolean;
+  isLoading: boolean;
 
   // Color settings (hex strings)
   defaultFeatureColor: string;
