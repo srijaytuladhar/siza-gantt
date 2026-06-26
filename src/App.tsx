@@ -5,7 +5,7 @@ import { VirtualList } from './components/VirtualList';
 import { TreeRow } from './components/HierarchyTree';
 import { TimelineRow, TimelineHeader } from './components/GanttTimeline';
 import { KanbanBoard } from './components/KanbanBoard';
-import { dateToX, formatDateStr, generateHeaders } from './utils/dateUtils';
+import { dateToX, formatDateStr, generateHeaders, ZOOM_CONFIG } from './utils/dateUtils';
 import './App.css';
 
 function App() {
@@ -55,24 +55,26 @@ function App() {
     if (rightScrollRef.current) {
       const todayStr = formatDateStr(new Date());
       const x = dateToX(todayStr, viewStartDate, zoom);
-      const containerWidth = rightScrollRef.current.clientWidth;
+      const dayWidth = ZOOM_CONFIG[zoom].dayWidth;
       
-      // Center today in the viewport
+      // Align today leaving 1 day of margin on the left and reset vertical scroll
       rightScrollRef.current.scrollTo({
-        left: x - containerWidth / 2,
+        left: x - dayWidth,
+        top: 0,
         behavior: 'smooth',
       });
     }
   };
 
-  // Scroll to today on mount
+  // Scroll to today on mount and when switching back to timeline view
   useEffect(() => {
-    // Small timeout to ensure container is fully rendered and layout dimensions are set
-    const timer = setTimeout(() => {
-      handleScrollToToday();
-    }, 200);
-    return () => clearTimeout(timer);
-  }, [zoom]); // Re-center when zoom level changes since timeline width expands/shrinks
+    if (viewMode === 'timeline') {
+      const timer = setTimeout(() => {
+        handleScrollToToday();
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [zoom, viewMode]);
 
   // Keyboard Shortcuts Listener
   useEffect(() => {

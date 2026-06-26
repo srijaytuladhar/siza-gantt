@@ -1,14 +1,14 @@
 import React from 'react';
 import { useGanttStore } from '../store/ganttStore';
-import { 
-  FiPlus, 
-  FiTrash2, 
-  FiRotateCcw, 
-  FiRotateCw, 
-  FiSun, 
-  FiMoon, 
-  FiCalendar, 
-  FiZap, 
+import {
+  FiPlus,
+  FiTrash2,
+  FiRotateCcw,
+  FiRotateCw,
+  FiSun,
+  FiMoon,
+  FiCalendar,
+  FiZap,
   FiRefreshCw,
   FiTrello
 } from 'react-icons/fi';
@@ -43,15 +43,15 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onScrollToToday }) => {
 
   return (
     <header className="h-14 border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 flex items-center justify-between shrink-0 select-none z-30">
-      
+
       {/* Brand & Left Actions */}
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-md shadow-indigo-500/20">
-            <span className="text-white font-extrabold text-sm tracking-tighter">AG</span>
+            <span className="text-white font-extrabold text-sm tracking-tighter">SG</span>
           </div>
           <span className="font-bold tracking-tight text-zinc-900 dark:text-zinc-50 hidden sm:inline-block">
-            Apex<span className="text-indigo-500">Gantt</span>
+            Siza<span className="text-indigo-500">Gantt</span>
           </span>
         </div>
 
@@ -61,22 +61,20 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onScrollToToday }) => {
         <div className="flex items-center bg-zinc-100 dark:bg-zinc-900 rounded-lg p-0.5 shrink-0">
           <button
             onClick={() => setViewMode('timeline')}
-            className={`px-3 py-1 text-xs font-bold rounded-md flex items-center space-x-1.5 transition-all duration-150 cursor-pointer ${
-              viewMode === 'timeline'
-                ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
-            }`}
+            className={`px-3 py-1 text-xs font-bold rounded-md flex items-center space-x-1.5 transition-all duration-150 cursor-pointer ${viewMode === 'timeline'
+              ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
+              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+              }`}
           >
             <FiCalendar className="w-3.5 h-3.5" />
             <span className="hidden md:inline">Timeline</span>
           </button>
           <button
             onClick={() => setViewMode('kanban')}
-            className={`px-3 py-1 text-xs font-bold rounded-md flex items-center space-x-1.5 transition-all duration-150 cursor-pointer ${
-              viewMode === 'kanban'
-                ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
-            }`}
+            className={`px-3 py-1 text-xs font-bold rounded-md flex items-center space-x-1.5 transition-all duration-150 cursor-pointer ${viewMode === 'kanban'
+              ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
+              : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+              }`}
           >
             <FiTrello className="w-3.5 h-3.5" />
             <span className="hidden md:inline">Kanban</span>
@@ -93,8 +91,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onScrollToToday }) => {
             <FiPlus className="w-4.5 h-4.5" />
             <span>New Project</span>
           </button>
-          
-          <button
+
+          <button hidden
             onClick={loadSampleData}
             title="Load Sample Project Data"
             className="hidden md:flex items-center space-x-1 px-2.5 h-9 rounded-lg border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-900 text-zinc-700 dark:text-zinc-300 text-xs font-medium transition-all"
@@ -103,7 +101,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onScrollToToday }) => {
             <span>Reset Demo</span>
           </button>
 
-          <button
+          <button hidden
             onClick={loadHugeData}
             title="Load 100 Projects, 500 Features, 5,000 Tasks"
             className="flex items-center space-x-1 px-2.5 h-9 rounded-lg border border-yellow-500/30 hover:border-yellow-500/50 hover:bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 text-xs font-semibold transition-all"
@@ -113,7 +111,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onScrollToToday }) => {
           </button>
 
           {projectIds.length > 0 && (
-            <button
+            <button hidden
               onClick={() => {
                 if (confirm('Delete all projects? This cannot be undone.')) clearAll();
               }}
@@ -153,11 +151,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onScrollToToday }) => {
               <button
                 key={z}
                 onClick={() => setZoom(z)}
-                className={`px-3 py-1 text-xs font-semibold rounded-md uppercase tracking-wider transition-all duration-150 ${
-                  zoom === z
-                    ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                    : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
-                }`}
+                className={`px-3 py-1 text-xs font-semibold rounded-md uppercase tracking-wider transition-all duration-150 ${zoom === z
+                  ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                  : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200'
+                  }`}
               >
                 {z.slice(0, -1)}
               </button>

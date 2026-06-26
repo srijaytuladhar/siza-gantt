@@ -148,7 +148,7 @@ const ensureUncategorizedExists = (
   
   const updatedProjects = { ...projects };
   const updatedFeatures = { ...features };
-  const updatedProjectIds = [...projectIds];
+  const updatedProjectIds = projectIds.filter(id => id !== 'project_uncategorized');
 
   if (!updatedProjects['project_uncategorized']) {
     updatedProjects['project_uncategorized'] = {
@@ -183,9 +183,7 @@ const ensureUncategorizedExists = (
     };
   }
 
-  if (!updatedProjectIds.includes('project_uncategorized')) {
-    updatedProjectIds.push('project_uncategorized');
-  }
+  updatedProjectIds.push('project_uncategorized');
 
   return { projects: updatedProjects, features: updatedFeatures, projectIds: updatedProjectIds };
 };
@@ -450,7 +448,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
     };
 
     const newProjects = { ...get().projects, [id]: newProject };
-    const newProjectIds = [...get().projectIds, id];
+    const newProjectIds = [...get().projectIds.filter(pid => pid !== 'project_uncategorized'), id, 'project_uncategorized'];
 
     set({ projects: newProjects, projectIds: newProjectIds, selectedId: id, editingId: id });
     saveToLocalStorage({ ...get(), projects: newProjects, projectIds: newProjectIds });
@@ -1620,7 +1618,15 @@ export const useGanttStore = create<GanttState>((set, get) => ({
     const { projects, features, tasks, projectIds } = get();
     const rows: FlatRow[] = [];
 
-    projectIds.forEach((pId) => {
+    // Sort regular projects by start date
+    const sortedProjectIds = projectIds
+      .filter((id) => id !== 'project_uncategorized')
+      .map((id) => projects[id])
+      .filter(Boolean)
+      .sort((a, b) => a.startDate.localeCompare(b.startDate))
+      .map((p) => p.id);
+
+    sortedProjectIds.forEach((pId) => {
       const p = projects[pId];
       if (!p) return;
 
@@ -1637,32 +1643,14 @@ export const useGanttStore = create<GanttState>((set, get) => ({
 
       if (p.collapsed) return;
 
-      if (p.id === 'project_uncategorized') {
-        const uncFeat = features['feature_uncategorized'];
-        if (uncFeat) {
-          uncFeat.taskIds.forEach((tId) => {
-            const t = tasks[tId];
-            if (!t) return;
-            rows.push({
-              id: t.id,
-              type: 'task',
-              name: t.name,
-              level: 1,
-              parentId: p.id,
-              startDate: t.startDate,
-              dueDate: t.dueDate,
-              duration: t.duration,
-              status: t.status,
-            });
-          });
-        }
-        return;
-      }
+      // Sort features by start date
+      const sortedFeatures = p.featureIds
+        .map((fId) => features[fId])
+        .filter(Boolean)
+        .sort((a, b) => a.startDate.localeCompare(b.startDate));
 
-      p.featureIds.forEach((fId) => {
-        if (fId === 'feature_uncategorized') return;
-        const f = features[fId];
-        if (!f) return;
+      sortedFeatures.forEach((f) => {
+        if (f.id === 'feature_uncategorized') return;
 
         rows.push({
           id: f.id,
@@ -1679,10 +1667,13 @@ export const useGanttStore = create<GanttState>((set, get) => ({
 
         if (f.collapsed) return;
 
-        f.taskIds.forEach((tId) => {
-          const t = tasks[tId];
-          if (!t) return;
+        // Sort tasks by start date
+        const sortedTasks = f.taskIds
+          .map((tId) => tasks[tId])
+          .filter(Boolean)
+          .sort((a, b) => a.startDate.localeCompare(b.startDate));
 
+        sortedTasks.forEach((t) => {
           rows.push({
             id: t.id,
             type: 'task',
@@ -1697,6 +1688,45 @@ export const useGanttStore = create<GanttState>((set, get) => ({
         });
       });
     });
+
+    // Render uncategorized project at the bottom
+    const p = projects['project_uncategorized'];
+    if (p) {
+      rows.push({
+        id: p.id,
+        type: 'project',
+        name: p.name,
+        level: 0,
+        collapsed: p.collapsed,
+        startDate: p.startDate,
+        dueDate: p.dueDate,
+        duration: p.duration,
+      });
+
+      if (!p.collapsed) {
+        const uncFeat = features['feature_uncategorized'];
+        if (uncFeat) {
+          const sortedTasks = uncFeat.taskIds
+            .map((tId) => tasks[tId])
+            .filter(Boolean)
+            .sort((a, b) => a.startDate.localeCompare(b.startDate));
+
+          sortedTasks.forEach((t) => {
+            rows.push({
+              id: t.id,
+              type: 'task',
+              name: t.name,
+              level: 1,
+              parentId: p.id,
+              startDate: t.startDate,
+              dueDate: t.dueDate,
+              duration: t.duration,
+              status: t.status,
+            });
+          });
+        }
+      }
+    }
 
     return rows;
   },

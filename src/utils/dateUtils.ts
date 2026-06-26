@@ -15,7 +15,7 @@ import {
 
 export const ZOOM_CONFIG = {
   days: {
-    dayWidth: 48,
+    dayWidth: 72,
     headerHeight: 56,
   },
   weeks: {
