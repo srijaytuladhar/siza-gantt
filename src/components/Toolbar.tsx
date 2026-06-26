@@ -2,14 +2,11 @@ import React, { useState } from 'react';
 import { useGanttStore } from '../store/ganttStore';
 import {
   FiPlus,
-  FiTrash2,
   FiRotateCcw,
   FiRotateCw,
   FiSun,
   FiMoon,
   FiCalendar,
-  FiZap,
-  FiRefreshCw,
   FiTrello,
   FiSettings,
   FiMenu,
@@ -28,12 +25,8 @@ export const Toolbar: React.FC<ToolbarProps> = ({ onScrollToToday }) => {
     setZoom,
     setTheme,
     addProject,
-    clearAll,
-    loadSampleData,
-    loadHugeData,
     undo,
     redo,
-    projectIds,
     viewMode,
     setViewMode,
   } = useGanttStore();

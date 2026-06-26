@@ -80,7 +80,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   };
 
   const colors = getStatusColor();
-  const currentIdx = STATUS_ORDER.indexOf(status);
+
 
   return (
     <div

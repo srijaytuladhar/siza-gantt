@@ -17,6 +17,7 @@ interface GanttState {
   editingId: string | null;
   viewStartDate: string;
   viewEndDate: string;
+  viewMode: 'timeline' | 'kanban';
 
   // Color settings (hex strings)
   defaultFeatureColor: string;
