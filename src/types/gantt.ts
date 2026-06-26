@@ -32,6 +32,7 @@ export interface Project {
   dueDate: string; // YYYY-MM-DD (max of children)
   duration: number; // in days
   featureIds: string[];
+  color?: string; // Optional project color class name or hex code
 }
 
 export type GanttItemType = 'project' | 'feature' | 'task';

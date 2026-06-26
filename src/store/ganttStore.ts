@@ -34,6 +34,7 @@ interface GanttState {
   updateTaskDates: (taskId: string, startStr: string, dueStr: string) => void;
   moveFeature: (featureId: string, deltaDays: number) => void;
   setFeatureColor: (featureId: string, color: string) => void;
+  setProjectColor: (projectId: string, color: string) => void;
   setZoom: (zoom: ZoomLevel) => void;
   setTheme: (theme: 'light' | 'dark') => void;
   setSelectedId: (id: string | null) => void;
@@ -159,6 +160,7 @@ const ensureUncategorizedExists = (
       dueDate: todayStr,
       duration: 1,
       featureIds: ['feature_uncategorized'],
+      color: 'indigo',
     };
   } else {
     if (!updatedProjects['project_uncategorized'].featureIds.includes('feature_uncategorized')) {
@@ -336,6 +338,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
             dueDate: p.due_date || formatDateStr(new Date()),
             duration: p.duration || 1,
             featureIds: [],
+            color: p.color || 'indigo',
           };
         });
       }
@@ -445,6 +448,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
       dueDate: todayStr,
       duration: 1,
       featureIds: [],
+      color: 'indigo',
     };
 
     const newProjects = { ...get().projects, [id]: newProject };
@@ -462,6 +466,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
         start_date: todayStr,
         due_date: todayStr,
         duration: 1,
+        color: 'indigo',
       });
       if (error) console.error('Failed to sync new project to Supabase:', error.message);
     }
@@ -979,6 +984,27 @@ export const useGanttStore = create<GanttState>((set, get) => ({
         .from('features')
         .update({ color })
         .eq('id', featureId);
+    }
+  },
+
+  setProjectColor: async (projectId, color) => {
+    pushHistory(get());
+    const newProjects = {
+      ...get().projects,
+      [projectId]: {
+        ...get().projects[projectId],
+        color,
+      },
+    };
+    set({ projects: newProjects });
+    saveToLocalStorage({ ...get(), projects: newProjects });
+
+    if (get().supabaseConnected) {
+      const { error } = await supabase
+        .from('projects')
+        .update({ color })
+        .eq('id', projectId);
+      if (error) console.error('Failed to sync project color to Supabase:', error.message);
     }
   },
 
@@ -1639,6 +1665,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
         startDate: p.startDate,
         dueDate: p.dueDate,
         duration: p.duration,
+        color: p.color || 'indigo',
       });
 
       if (p.collapsed) return;
@@ -1662,7 +1689,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
           startDate: f.startDate,
           dueDate: f.dueDate,
           duration: f.duration,
-          color: f.color,
+          color: 'orange', // Always default to orange (features are the same color)
         });
 
         if (f.collapsed) return;
@@ -1701,6 +1728,7 @@ export const useGanttStore = create<GanttState>((set, get) => ({
         startDate: p.startDate,
         dueDate: p.dueDate,
         duration: p.duration,
+        color: p.color || 'indigo',
       });
 
       if (!p.collapsed) {

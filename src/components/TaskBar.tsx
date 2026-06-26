@@ -145,19 +145,28 @@ export const TaskBar: React.FC<TaskBarProps> = React.memo(({ item }) => {
 
   // Styling based on row type
   const getBarColor = () => {
-    if (isSelected) {
-      return 'bg-indigo-600 dark:bg-indigo-500 border border-indigo-700 dark:border-indigo-400';
+    if (item.type === 'project') {
+      const projColorCfg = FEATURE_COLORS[item.color || 'indigo'] || FEATURE_COLORS.indigo;
+      return `${projColorCfg.bg} ${
+        isSelected 
+          ? 'border-2 border-indigo-500 dark:border-indigo-400 ring-2 ring-indigo-500/40 z-20 shadow-md' 
+          : `border ${projColorCfg.border}`
+      }`;
     }
-
-    switch (item.type) {
-      case 'project':
-        return 'bg-zinc-800/80 dark:bg-zinc-300/80 border border-zinc-700 dark:border-zinc-400';
-      case 'feature':
-        const colorCfg = FEATURE_COLORS[item.color || 'cyan'] || FEATURE_COLORS.cyan;
-        return `${colorCfg.bg} border ${colorCfg.border}`;
-      case 'task':
-        return 'bg-emerald-500/80 dark:bg-emerald-600/80 border border-emerald-600 dark:border-emerald-500 hover:bg-emerald-500 dark:hover:bg-emerald-600';
+    if (item.type === 'feature') {
+      const colorCfg = FEATURE_COLORS[item.color || 'orange'] || FEATURE_COLORS.orange;
+      return `${colorCfg.bg} ${
+        isSelected 
+          ? 'border-2 border-indigo-500 dark:border-indigo-400 ring-2 ring-indigo-500/40 z-20 shadow-md' 
+          : `border ${colorCfg.border}`
+      }`;
     }
+    // task
+    return `bg-emerald-500/80 dark:bg-emerald-600/80 hover:bg-emerald-500 dark:hover:bg-emerald-600 ${
+      isSelected 
+        ? 'border-2 border-indigo-500 dark:border-indigo-400 ring-2 ring-indigo-500/40 z-20 shadow-md' 
+        : 'border border-emerald-600 dark:border-emerald-500'
+    }`;
   };
 
   const isTask = item.type === 'task';
@@ -188,8 +197,32 @@ export const TaskBar: React.FC<TaskBarProps> = React.memo(({ item }) => {
         />
       )}
 
+      {/* Zigzag pattern for Done Tasks */}
+      {isTask && item.status === 'done' && (
+        <div 
+          className="absolute inset-0 pointer-events-none rounded-md opacity-40 z-0"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M0 8 L4 4 L8 8 L12 4 L16 8 L16 12 L12 8 L8 12 L4 8 L0 12 Z' fill='%23ffffff'/%3E%3C/svg%3E")`,
+            backgroundSize: '16px 16px',
+            backgroundRepeat: 'repeat',
+          }}
+        />
+      )}
+
+      {/* Dotted pattern for Projects */}
+      {item.type === 'project' && (
+        <div 
+          className="absolute inset-0 pointer-events-none rounded-md opacity-40 z-0"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Ccircle cx='4' cy='4' r='1.5' fill='%23ffffff'/%3E%3C/svg%3E")`,
+            backgroundSize: '8px 8px',
+            backgroundRepeat: 'repeat',
+          }}
+        />
+      )}
+
       {/* Bar Content */}
-      <span className="text-[10px] font-bold text-white px-2 truncate w-full pointer-events-none drop-shadow-sm select-none">
+      <span className="text-[10px] font-bold text-white px-2 truncate w-full pointer-events-none drop-shadow-sm select-none z-10">
         {item.name} {isTask && `(${item.duration}d)`}
       </span>
 

@@ -210,4 +210,5 @@ export const FEATURE_COLORS: Record<string, { bg: string; text: string; border: 
   blue: { bg: 'bg-blue-500/80 dark:bg-blue-600/80', text: 'text-blue-500 dark:text-blue-400', border: 'border-blue-600 dark:border-blue-500', dot: 'bg-blue-500' },
   pink: { bg: 'bg-pink-500/80 dark:bg-pink-600/80', text: 'text-pink-500 dark:text-pink-400', border: 'border-pink-600 dark:border-pink-500', dot: 'bg-pink-500' },
   indigo: { bg: 'bg-indigo-500/80 dark:bg-indigo-600/80', text: 'text-indigo-500 dark:text-indigo-400', border: 'border-indigo-600 dark:border-indigo-500', dot: 'bg-indigo-500' },
+  orange: { bg: 'bg-orange-500/80 dark:bg-orange-600/80', text: 'text-orange-500 dark:text-orange-400', border: 'border-orange-600 dark:border-orange-500', dot: 'bg-orange-500' },
 };

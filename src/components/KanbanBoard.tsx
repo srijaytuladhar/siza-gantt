@@ -17,7 +17,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   tasks,
   onTaskDrop,
 }) => {
-  const { features } = useGanttStore();
+  const { features, projects } = useGanttStore();
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -85,9 +85,10 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       <div className="flex-1 overflow-y-auto space-y-3 pr-1">
         {tasks.map((task) => {
           const parentFeature = features[task.parentId];
-          const colorCfg = parentFeature
-            ? FEATURE_COLORS[parentFeature.color || 'cyan'] || FEATURE_COLORS.cyan
-            : FEATURE_COLORS.cyan;
+          const grandparentProject = parentFeature ? projects[parentFeature.parentId] : null;
+          const colorCfg = grandparentProject
+            ? FEATURE_COLORS[grandparentProject.color || 'indigo'] || FEATURE_COLORS.indigo
+            : FEATURE_COLORS.orange;
 
           return (
             <div
@@ -102,7 +103,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
                 e.currentTarget.classList.remove('opacity-40');
               }}
               className="bg-white dark:bg-zinc-900 border border-zinc-200/50 dark:border-zinc-800/40 rounded-lg p-3.5 shadow-sm hover:shadow-md dark:shadow-black/25 cursor-grab active:cursor-grabbing hover:-translate-y-0.5 transition-all duration-200 select-none group border-l-3 border-l-emerald-500/30"
-              style={{ borderLeftColor: colorCfg.dot === 'bg-cyan-500' ? '#06b6d4' : colorCfg.dot === 'bg-emerald-500' ? '#10b981' : colorCfg.dot === 'bg-violet-500' ? '#8b5cf6' : colorCfg.dot === 'bg-amber-500' ? '#f59e0b' : colorCfg.dot === 'bg-rose-500' ? '#f43f5e' : colorCfg.dot === 'bg-blue-500' ? '#3b82f6' : colorCfg.dot === 'bg-pink-500' ? '#ec4899' : '#6366f1' }}
+              style={{ borderLeftColor: colorCfg.dot === 'bg-orange-500' ? '#f97316' : colorCfg.dot === 'bg-cyan-500' ? '#06b6d4' : colorCfg.dot === 'bg-emerald-500' ? '#10b981' : colorCfg.dot === 'bg-violet-500' ? '#8b5cf6' : colorCfg.dot === 'bg-amber-500' ? '#f59e0b' : colorCfg.dot === 'bg-rose-500' ? '#f43f5e' : colorCfg.dot === 'bg-blue-500' ? '#3b82f6' : colorCfg.dot === 'bg-pink-500' ? '#ec4899' : '#6366f1' }}
             >
               {/* Card Title */}
               <h4 className="font-semibold text-zinc-900 dark:text-zinc-50 text-sm mb-2 group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors line-clamp-2">

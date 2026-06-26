@@ -27,7 +27,7 @@ export const TreeRow: React.FC<TreeRowProps> = React.memo(({ item }) => {
     toggleCollapse,
     addFeature,
     addTask,
-    setFeatureColor,
+    setProjectColor,
     moveTaskToFeature,
     moveTaskToUncategorized,
   } = useGanttStore();
@@ -167,20 +167,19 @@ export const TreeRow: React.FC<TreeRowProps> = React.memo(({ item }) => {
   const getIcon = () => {
     switch (item.type) {
       case 'project':
-        return <FiBriefcase className="w-4 h-4 text-indigo-500 dark:text-indigo-400 shrink-0" />;
-      case 'feature':
-        const colorCfg = FEATURE_COLORS[item.color || 'cyan'] || FEATURE_COLORS.cyan;
+        const projColorCfg = FEATURE_COLORS[item.color || 'indigo'] || FEATURE_COLORS.indigo;
         return (
           <div className="relative flex items-center shrink-0">
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                if (item.id === 'project_uncategorized') return;
                 setShowColorPicker(!showColorPicker);
               }}
               className={`p-0.5 rounded hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors cursor-pointer`}
-              title="Change Feature Color"
+              title={item.id === 'project_uncategorized' ? 'Uncategorized Project' : 'Change Project Color'}
             >
-              <FiLayers className={`w-4 h-4 shrink-0 ${colorCfg.text}`} />
+              <FiBriefcase className={`w-4 h-4 shrink-0 ${projColorCfg.text}`} />
             </button>
 
             {showColorPicker && (
@@ -194,7 +193,7 @@ export const TreeRow: React.FC<TreeRowProps> = React.memo(({ item }) => {
                     <button
                       key={cKey}
                       onClick={() => {
-                        setFeatureColor(item.id, cKey);
+                        setProjectColor(item.id, cKey);
                         setShowColorPicker(false);
                       }}
                       className={`w-3.5 h-3.5 rounded-full ${cfg.dot} hover:scale-125 transition-transform cursor-pointer border border-white dark:border-zinc-800`}
@@ -205,6 +204,8 @@ export const TreeRow: React.FC<TreeRowProps> = React.memo(({ item }) => {
             )}
           </div>
         );
+      case 'feature':
+        return <FiLayers className="w-4 h-4 text-orange-500 dark:text-orange-400 shrink-0" />;
       case 'task':
         return <FiCheckSquare className="w-4 h-4 text-emerald-500 dark:text-emerald-400 shrink-0" />;
     }

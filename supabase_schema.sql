@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS projects (
   start_date TEXT,
   due_date TEXT,
   duration INT,
+  color TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
