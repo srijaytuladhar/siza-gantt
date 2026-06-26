@@ -55,6 +55,16 @@ export const VirtualList: React.FC<VirtualListProps> = ({
     }
   }, []);
 
+  // On mobile tree mode: left panel scrolls independently and drives virtual rendering
+  const handleLeftScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    setScrollTop(target.scrollTop);
+    // Also sync right panel if it's mounted
+    if (rightScrollRef.current) {
+      rightScrollRef.current.scrollTop = target.scrollTop;
+    }
+  }, []);
+
   // Forward wheel events from the left pane (tree) to the right pane (timeline)
   const handleLeftWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
     if (rightScrollRef.current) {
@@ -114,11 +124,16 @@ export const VirtualList: React.FC<VirtualListProps> = ({
           Hierarchy / Scope Tree
         </div>
 
-        {/* Left Scroll Container (no scrollbars visible, wheels to right container) */}
+        {/* Left Scroll Container */}
+        {/* On desktop: overflow-y-hidden (synced via JS from right panel wheel/scroll) */}
+        {/* On mobile tree mode: overflow-y-auto so user can scroll directly */}
         <div
           ref={leftScrollRef}
           onWheel={handleLeftWheel}
-          className="flex-1 overflow-y-hidden overflow-x-auto relative"
+          onScroll={mobilePanelMode === 'tree' ? handleLeftScroll : undefined}
+          className={`flex-1 overflow-x-auto relative ${
+            mobilePanelMode === 'tree' ? 'overflow-y-auto md:overflow-y-hidden' : 'overflow-y-hidden'
+          }`}
         >
           <div style={{ height: totalHeight }} className="w-full relative">
             {visibleItems.map((item, idx) => {

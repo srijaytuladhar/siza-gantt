@@ -9,12 +9,17 @@ import {
   FiLayers, 
   FiCheckSquare, 
   FiPlus, 
-  FiTrash2
+  FiTrash2,
+  FiMoreVertical,
 } from 'react-icons/fi';
 
 interface TreeRowProps {
   item: FlatRow;
 }
+
+// Detect if we're on a touch device
+const isTouchDevice = () => 
+  typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
 export const TreeRow: React.FC<TreeRowProps> = React.memo(({ item }) => {
   const {
@@ -35,6 +40,8 @@ export const TreeRow: React.FC<TreeRowProps> = React.memo(({ item }) => {
   const [editValue, setEditValue] = useState(item.name);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [isTouch] = useState(isTouchDevice);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isSelected = selectedId === item.id;
@@ -44,7 +51,6 @@ export const TreeRow: React.FC<TreeRowProps> = React.memo(({ item }) => {
   useEffect(() => {
     if (isEditing) {
       setEditValue(item.name);
-      // Auto focus and select input text
       setTimeout(() => {
         if (inputRef.current) {
           inputRef.current.focus();
@@ -53,6 +59,18 @@ export const TreeRow: React.FC<TreeRowProps> = React.memo(({ item }) => {
       }, 50);
     }
   }, [isEditing, item.name]);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    if (!showMobileMenu) return;
+    const handler = () => setShowMobileMenu(false);
+    document.addEventListener('touchstart', handler);
+    document.addEventListener('mousedown', handler);
+    return () => {
+      document.removeEventListener('touchstart', handler);
+      document.removeEventListener('mousedown', handler);
+    };
+  }, [showMobileMenu]);
 
   const handleDoubleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -76,15 +94,17 @@ export const TreeRow: React.FC<TreeRowProps> = React.memo(({ item }) => {
     }
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
+    setShowMobileMenu(false);
     if (confirm(`Delete this ${item.type} and all its contents?`)) {
       deleteItem(item.id, item.type);
     }
   };
 
-  const handleAddChild = (e: React.MouseEvent) => {
+  const handleAddChild = (e: React.MouseEvent | React.TouchEvent) => {
     e.stopPropagation();
+    setShowMobileMenu(false);
     if (item.id === 'project_uncategorized') {
       const name = prompt('Enter Uncategorized Task Name:');
       if (name && name.trim()) {
@@ -103,6 +123,14 @@ export const TreeRow: React.FC<TreeRowProps> = React.memo(({ item }) => {
     }
   };
 
+  const handleRename = (e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    setShowMobileMenu(false);
+    if (item.id !== 'project_uncategorized') {
+      setEditingId(item.id);
+    }
+  };
+
   const handleCollapseToggle = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (item.type !== 'task') {
@@ -114,7 +142,7 @@ export const TreeRow: React.FC<TreeRowProps> = React.memo(({ item }) => {
     setSelectedId(item.id);
   };
 
-  // Drag & Drop handlers
+  // Drag & Drop handlers (desktop only)
   const handleDragStart = (e: React.DragEvent) => {
     if (item.type === 'task') {
       e.dataTransfer.setData('taskId', item.id);
@@ -215,12 +243,12 @@ export const TreeRow: React.FC<TreeRowProps> = React.memo(({ item }) => {
     <div
       onClick={handleRowClick}
       onDoubleClick={handleDoubleClick}
-      draggable={item.type === 'task'}
+      draggable={item.type === 'task' && !isTouch}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className={`h-full flex items-center justify-between pr-3 group cursor-pointer transition-all border-b border-zinc-200/50 dark:border-zinc-800/40 ${indentClass} ${rowHighlightClass} ${dragOverClass} ${item.type === 'task' ? 'active:opacity-50 select-none' : ''}`}
+      className={`h-full flex items-center justify-between pr-2 group cursor-pointer transition-all border-b border-zinc-200/50 dark:border-zinc-800/40 ${indentClass} ${rowHighlightClass} ${dragOverClass} ${item.type === 'task' ? 'select-none' : ''}`}
     >
       <div className="flex items-center space-x-2 overflow-hidden flex-1 py-1">
         {/* Collapse Arrow */}
@@ -270,27 +298,88 @@ export const TreeRow: React.FC<TreeRowProps> = React.memo(({ item }) => {
         )}
       </div>
 
-      {/* Hover action buttons */}
-      <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0">
-        {item.type !== 'task' && (
+      {/* Action buttons */}
+      {isTouch ? (
+        /* Mobile: ⋮ more button that opens a menu */
+        <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
           <button
-            onClick={handleAddChild}
-            className="p-1 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded transition-all"
-            title={item.id === 'project_uncategorized' ? 'Add Task' : item.type === 'project' ? 'Add Feature' : 'Add Task'}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowMobileMenu(!showMobileMenu);
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowMobileMenu(!showMobileMenu);
+            }}
+            className="p-2 rounded-lg text-zinc-400 dark:text-zinc-500 active:bg-zinc-100 dark:active:bg-zinc-800"
           >
-            <FiPlus className="w-3.5 h-3.5" />
+            <FiMoreVertical className="w-4 h-4" />
           </button>
-        )}
-        {item.id !== 'project_uncategorized' && (
-          <button
-            onClick={handleDelete}
-            className="p-1 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-400 hover:text-red-500 dark:hover:text-red-400 rounded transition-all"
-            title="Delete"
-          >
-            <FiTrash2 className="w-3.5 h-3.5" />
-          </button>
-        )}
-      </div>
+
+          {showMobileMenu && (
+            <div
+              className="absolute right-0 top-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-xl z-50 overflow-hidden min-w-[140px]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Rename */}
+              {item.id !== 'project_uncategorized' && (
+                <button
+                  onTouchEnd={(e) => handleRename(e)}
+                  onClick={(e) => handleRename(e)}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 active:bg-zinc-100 dark:active:bg-zinc-700"
+                >
+                  ✏️ Rename
+                </button>
+              )}
+              {/* Add child */}
+              {item.type !== 'task' && (
+                <button
+                  onTouchEnd={(e) => handleAddChild(e)}
+                  onClick={(e) => handleAddChild(e)}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 active:bg-zinc-100 dark:active:bg-zinc-700"
+                >
+                  <FiPlus className="w-3.5 h-3.5 text-indigo-500" />
+                  {item.id === 'project_uncategorized' ? 'Add Task' : item.type === 'project' ? 'Add Feature' : 'Add Task'}
+                </button>
+              )}
+              {/* Delete */}
+              {item.id !== 'project_uncategorized' && (
+                <button
+                  onTouchEnd={(e) => handleDelete(e)}
+                  onClick={(e) => handleDelete(e)}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:bg-red-100 dark:active:bg-red-900/30"
+                >
+                  <FiTrash2 className="w-3.5 h-3.5" />
+                  Delete
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Desktop: hover buttons */
+        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150 shrink-0">
+          {item.type !== 'task' && (
+            <button
+              onClick={handleAddChild}
+              className="p-1 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded transition-all"
+              title={item.id === 'project_uncategorized' ? 'Add Task' : item.type === 'project' ? 'Add Feature' : 'Add Task'}
+            >
+              <FiPlus className="w-3.5 h-3.5" />
+            </button>
+          )}
+          {item.id !== 'project_uncategorized' && (
+            <button
+              onClick={handleDelete}
+              className="p-1 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-400 hover:text-red-500 dark:hover:text-red-400 rounded transition-all"
+              title="Delete"
+            >
+              <FiTrash2 className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 });
